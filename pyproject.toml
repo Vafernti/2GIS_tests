@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "2GIS-QAA"
+version = "0.1.0"
+description = "Домашнее задание - Автотесты + allure-отчёты"
+authors = ["Ivan Fernatii ivan_fernatii@outlook.com"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+requests = "2.32.4"
+pytest = "8.4.1"
+pytest-xdist = "3.8.0"
+allure-pytest = "2.15.0"
+faker = "37.5.3"
+pytest-rerunfailures = "14.0"
+python-dotenv = "1.0.1"
+
+[tool.pytest.ini_options]
+addopts = "-v --alluredir=allure-results"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

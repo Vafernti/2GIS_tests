@@ -1,0 +1,50 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Директории виртуальных окружений
+env/
+venv/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# Пакеты
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Логи
+*.log
+
+# Конфигурационные файлы IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.python-version
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# Файлы тестирования
+.coverage
+.coverage.*
+nosetests.xml
+test-results/
+*.cover
+
+# Файлы конфигурации
+*.env
+*.env.local
+*.env.*.local
+
+# Другие временные файлы
+*.tmp
+*.temp
+*.bak
+*.swp
