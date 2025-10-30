@@ -1,5 +1,4 @@
 import allure
-import pytest
 
 from constants import DEFAULT_PAYLOAD, OLD_TOKEN
 

@@ -21,7 +21,7 @@ def api(session) -> FavoritesClient:
     return client
 
 
-@pytest.fixture()
+@pytest.fixture(scope="function")
 def unauth_api() -> Generator[FavoritesClient, None, None]:
     session = requests.Session()
     session.headers.update(DEFAULT_HEADERS)

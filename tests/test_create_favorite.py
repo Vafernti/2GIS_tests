@@ -6,8 +6,12 @@ from constants import (
     DEFAULT_LATITUDE,
     DEFAULT_LONGITUDE,
     DEFAULT_TITLE,
-    DEFAULT_PAYLOAD
+    DEFAULT_PAYLOAD,
+    LAT_LEVELS,
+    LON_LEVELS
 )
+
+PAIRS = [(lat, lon) for lat in LAT_LEVELS for lon in LON_LEVELS]
 
 
 @allure.feature("POST /v1/favorites")
@@ -25,7 +29,7 @@ def test_create_favorite_default_payload(api):
 @allure.story("Создание избранного места, валидация поля title")
 @allure.tag("positive", )
 @pytest.mark.parametrize(
-        "title",
+    "title",
     [
         "дом",
         "home",
@@ -64,7 +68,7 @@ def test_create_favorite_success(api, title):
 @allure.story("Создание избранного места, валдиация поля title")
 @allure.tag("negative")
 @pytest.mark.parametrize(
-       "title",
+    "title",
     [
         None,
         "",
@@ -232,6 +236,23 @@ def test_create_favorite_lon_negative(api, lon):
     }
     resp = api.create_favorite(payload=payload)
     assert resp.status_code == 400, f"{resp.status_code} {resp.json()}"
+
+
+@allure.feature("POST /v1/favorites")
+@allure.story("Pairwise: lat×lon (минимальный 3×3)")
+@allure.tag("positive")
+@pytest.mark.parametrize(
+    "lat,lon",
+    PAIRS,
+    ids=[f"lat={lat};lon={lon}" for lat, lon in PAIRS],
+)
+def test_pairwise_lat_lon(api, lat, lon):
+    payload = {"title": DEFAULT_TITLE, "lat": lat, "lon": lon}
+    resp = api.create_favorite(payload=payload)
+    assert resp.status_code == 200, f"{resp.status_code} {resp.text}"
+    data = resp.json()
+    assert data["lat"] == lat
+    assert data["lon"] == lon
 
 
 @allure.feature("POST /v1/favorites")
