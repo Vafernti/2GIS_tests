@@ -25,12 +25,9 @@ BLUE, GREEN, RED, YELLOW
 - POST /v1/favorites
 Запрос:
 ```
-{
-    "title": "Париж",
-    "lat": 48.8575,
-    "lon": 2.3514,
-    "color: "RED"
-}
+curl -X POST -s https://regions-test.2gis.com/v1/favorites \
+-d "title=Париж&lat=48.8575&lon=2.3514&color=RED" \
+-b "token=f3a7d0ba35e94caeabf22554dfdb2e3e
 ```
 Ответ:
 ```

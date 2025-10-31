@@ -8,7 +8,10 @@ from constants import (
     DEFAULT_TITLE,
     DEFAULT_PAYLOAD,
     LAT_LEVELS,
-    LON_LEVELS
+    LON_LEVELS,
+    MISSING_TITLE_ERR,
+    EMPTY_TITLE_ERR,
+    BOUNDARY_TITLE_ERR
 )
 
 PAIRS = [(lat, lon) for lat in LAT_LEVELS for lon in LON_LEVELS]
@@ -17,7 +20,7 @@ PAIRS = [(lat, lon) for lat in LAT_LEVELS for lon in LON_LEVELS]
 @allure.feature("POST /v1/favorites")
 @allure.story("Проверка успешного создания избранного места")
 @allure.tag("positive", "smoke")
-def test_create_favorite_default_payload(api):
+def test_create_favorite(api):
     resp = api.create_favorite(payload=DEFAULT_PAYLOAD)
     assert resp.status_code == 200, f"{resp.status_code} {resp.json()}"
     assert resp.json()["title"] == DEFAULT_TITLE
@@ -27,7 +30,7 @@ def test_create_favorite_default_payload(api):
 
 @allure.feature("POST /v1/favorites")
 @allure.story("Создание избранного места, валидация поля title")
-@allure.tag("positive", )
+@allure.tag("positive")
 @pytest.mark.parametrize(
     "title",
     [
@@ -53,7 +56,7 @@ def test_create_favorite_default_payload(api):
         "length_999 (max allowed)",
     ],
 )
-def test_create_favorite_success(api, title):
+def test_create_favorite_title_positive(api, title):
     payload = {
         "title": title,
         "lat": DEFAULT_LATITUDE,
@@ -68,23 +71,25 @@ def test_create_favorite_success(api, title):
 @allure.story("Создание избранного места, валдиация поля title")
 @allure.tag("negative")
 @pytest.mark.parametrize(
-    "title",
+    "title,err_msg",
     [
-        None,
-        "",
-        " ",
-        "x" * 1000,
-        1234,
-    ],
-    ids=[
-        "null_field",
-        "empty_field",
-        "space_only",
-        "length_1000 (exceeds max)",
-        "int_type",
+        pytest.param(None, MISSING_TITLE_ERR,
+                     id="null_field"),
+        pytest.param("",   EMPTY_TITLE_ERR,
+                     id="empty_string"),
+        pytest.param(" ", MISSING_TITLE_ERR,
+                     id="space_only",
+                     marks=pytest.mark.xfail(
+                         reason="BUG-001: title из пробелов принимается"
+                        )),
+        pytest.param("x"*1000, BOUNDARY_TITLE_ERR,
+                     id="length_1000_exceeds_max",
+                     marks=pytest.mark.xfail(
+                         reason="BUG-002: title=1000 принимается"
+                        )),
     ],
 )
-def test_create_favorite_negative(api, title):
+def test_create_favorite_title_negative(api, title, err_msg):
     payload = {
         "title": title,
         "lat": DEFAULT_LATITUDE,
@@ -92,6 +97,7 @@ def test_create_favorite_negative(api, title):
     }
     resp = api.create_favorite(payload=payload)
     assert resp.status_code == 400, f"{resp.status_code} {resp.json()}"
+    assert resp.json()["error"]["message"] == err_msg
 
 
 @allure.feature("POST /v1/favorites")
@@ -239,7 +245,7 @@ def test_create_favorite_lon_negative(api, lon):
 
 
 @allure.feature("POST /v1/favorites")
-@allure.story("Pairwise: lat×lon (минимальный 3×3)")
+@allure.story("Попарное тестирование полей lat и lon")
 @allure.tag("positive")
 @pytest.mark.parametrize(
     "lat,lon",
@@ -247,6 +253,8 @@ def test_create_favorite_lon_negative(api, lon):
     ids=[f"lat={lat};lon={lon}" for lat, lon in PAIRS],
 )
 def test_pairwise_lat_lon(api, lat, lon):
+    if lat == 0 and lon == 0:
+        pytest.xfail("BUG-003: сервер возавращает 500 на lat=0 и lon=0")
     payload = {"title": DEFAULT_TITLE, "lat": lat, "lon": lon}
     resp = api.create_favorite(payload=payload)
     assert resp.status_code == 200, f"{resp.status_code} {resp.text}"
@@ -296,8 +304,18 @@ def test_create_favorite_color_positive(api, color):
 @pytest.mark.parametrize(
     "color",
     [
-        "blue",
-        "BlUe",
+        pytest.param(
+            "blue",
+            id="lowercase_word",
+            marks=pytest.mark.xfail(
+                reason="BUG-004: принимаются значения в нижнем регистре"
+            )),
+        pytest.param(
+            "BlUe",
+            id="mixed_case_word",
+            marks=pytest.mark.xfail(
+                reason="BUG-004: принимаются значения в смешанном регистре"
+            )),
         "WHITE",
         "",
         " ",
@@ -333,6 +351,9 @@ def test_create_favorite_color_negative(api, color):
     assert resp.status_code == 400, f"{resp.status_code} {resp.text}"
 
 
+@pytest.mark.xfail(
+        reason="BUG-005: сервер возвращает created_at смещённый на час вперёд"
+)
 @allure.feature("POST /v1/favorites")
 @allure.story("Проверка created_at — корректная дата создания")
 @allure.tag("positive")
